@@ -98,46 +98,17 @@ func insertdb(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Dữ liệu đã được thêm thành công!")
 }
 
-// hàm hiển thị dữ liệu
-// func showdb(w http.ResponseWriter, r *http.Request) {
-// 	conn, err := dbConn()
-// 	w.Header().Set("Content-Type", "text/html")
-// 	defer conn.Close() //đóng kết nối khi thực hiện xong
-// 	if err != nil {
-// 		log.Println("ket noi database that bai %v", err)
-// 	}
-// 	rows, err := conn.Query("SELECT id,name,email FROM users")
-// 	if err != nil {
-// 		log.Println("some thing when wrong")
-// 	}
-// 	defer rows.Close() // kết thúc lệnh khi hiện thị xong
-// 	// Tạo chuỗi HTML
-// 	html := "<table border='1'><tr><th>ID</th><th>Name</th><th>Email</th></tr>"
-// 	// Duyệt qua các kết quả
-// 	for rows.Next() {
-// 		var id int
-// 		var name, email string
-
-// 		// Quét các cột trong hàng hiện tại vào biến
-// 		if err := rows.Scan(&id, &name, &email); err != nil {
-// 			fmt.Errorf("Lỗi khi đọc dữ liệu từ hàng: %v", err)
-// 		}
-
-// 		// Tạo hàng HTML từ dữ liệu
-// 		html += fmt.Sprintf("<tr><td>%d</td><td>%s</td><td>%s</td></tr>", id, name, email)
-// 	}
-
-// 	// Kết thúc bảng
-// 	html += "</table>"
-// 	if rows.Err() != nil {
-// 		fmt.Errorf("Nỗi khi duyệt kết quả")
-// 	}
-// 	fmt.Fprint(w, html)
-// }
+// Hàm để thêm CORS headers
+func enableCORS(w http.ResponseWriter) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+}
 
 func showdb(w http.ResponseWriter, r *http.Request) {
+	enableCORS(w)
 	conn, err := dbConn()
-	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("Content-Type", "text/paint")
 	defer conn.Close() // Đóng kết nối khi thực hiện xong
 
 	if err != nil {
@@ -192,6 +163,9 @@ func showdb(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/insert", insertdb)
 	http.HandleFunc("/show", showdb)
+	http.HandleFunc("/options", func(w http.ResponseWriter, r *http.Request) {
+		enableCORS(w)
+	})
 	log.Println("Server đang chạy tại http://localhost:8000")
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
