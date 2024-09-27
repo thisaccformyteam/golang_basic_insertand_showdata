@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <form method="post">
+        <label for="name">Name:</label>
+        <!--input ow day-->
+        <input type="text" name="name" id="name" required>
+        <label for="email">Email:</label>
+        <input type="email" name="email" id="email" required>
+        <input type="submit" value="submit" id="submit">
+    </form>
+
+    <section>
+        <div class="data">
+            <!-- Dữ liệu sẽ được hiển thị ở đây -->
+        </div>
+    </section>
+
+    <script>
+        const form = document.querySelector("form"),
+            submitButton = document.querySelector("#submit"),
+            dataDiv = document.querySelector(".data");
+
+        // Ngăn hành động mặc định của form
+        form.onsubmit = (e) => {
+            e.preventDefault();
+        };
+
+        // Khi nhấn nút "submit"
+        submitButton.onclick = () => {
+            let formData = new FormData(form);
+             fetchData();
+            // Gửi dữ liệu qua API /insert
+            fetch("http://localhost:8000/insert", { method: "POST", body: formData })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.text(); // Lấy phản hồi dạng text
+                })
+                .then(data => {
+                    console.log("Success:", data);
+                    // Gọi API để lấy dữ liệu mới nhất và hiển thị
+                    
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                });
+        };
+
+        // Hàm để fetch dữ liệu từ API /show và nhét vào <div class="data">
+        function fetchData() {
+            fetch("http://localhost:8000/show", { method: "GET" })
+                .then(response => response.text())  // Nhận dữ liệu dưới dạng text
+                .then(data => {
+                    console.log("Dữ liệu nhận được từ server:", data);  // Log dữ liệu để kiểm tra
+                    document.querySelector(".data").innerHTML = data;  // Chèn dữ liệu vào div
+                })
+                .catch((err) => {
+                    console.error("Lỗi khi tải dữ liệu:", err);
+                });
+
+        }
+
+        // Gọi fetchData() để hiển thị dữ liệu ngay khi trang được tải
+        fetchData();
+    </script>
+</body>
+
+</html>
