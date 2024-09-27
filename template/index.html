@@ -8,7 +8,20 @@
 </head>
 
 <body>
+    
+    <section>
+        <h1>tìm kiếm theo tên</h1>
+        <div class="find">
+            <input type="text" class="hind" placehole="find by name">
+        </div>
+        <div style="background-color: cadetblue;" class="data_hind">
+
+        </div>
+    </section>
     <form method="post">
+        <h1>nhập dữ liệu vào database</h1>
+        <div class="error_text" style="background-color: rgb(3, 82, 104);color: rgb(255, 255, 255);font-size: larger;">
+        </div>
         <label for="name">Name:</label>
         <!--input ow day-->
         <input type="text" name="name" id="name" required>
@@ -16,8 +29,8 @@
         <input type="email" name="email" id="email" required>
         <input type="submit" value="submit" id="submit">
     </form>
-
     <section>
+        <h1>dữ liệu của data sẽ được hiển thị ở đây</h1>
         <div class="data">
             <!-- Dữ liệu sẽ được hiển thị ở đây -->
         </div>
@@ -26,17 +39,30 @@
     <script>
         const form = document.querySelector("form"),
             submitButton = document.querySelector("#submit"),
-            dataDiv = document.querySelector(".data");
+            dataDiv = document.querySelector(".data"),
+            err = document.querySelector(".error_text"),
+            hind = document.querySelector(".hind"),
+            dataHind = document.querySelector(".data_hind");
 
         // Ngăn hành động mặc định của form
         form.onsubmit = (e) => {
             e.preventDefault();
         };
+        //tìm kiếm theo tên
+        hind.onkeyup = () => {
+            let name = hind.value.trim();
+            fetch("http://localhost:8000/findbyname?name=" + name, { method: "POST" })
+            .then(response => response.text())
+            .then(data =>{
+                dataHind.innerHTML=data
+            })
 
+        }
         // Khi nhấn nút "submit"
+        //gửi dữ liệu vào database
         submitButton.onclick = () => {
             let formData = new FormData(form);
-             fetchData();
+            fetchData();
             // Gửi dữ liệu qua API /insert
             fetch("http://localhost:8000/insert", { method: "POST", body: formData })
                 .then(response => {
@@ -47,8 +73,9 @@
                 })
                 .then(data => {
                     console.log("Success:", data);
+                    err.innerHTML = data;
                     // Gọi API để lấy dữ liệu mới nhất và hiển thị
-                    
+
                 })
                 .catch((error) => {
                     console.error("Error:", error);
@@ -56,6 +83,7 @@
         };
 
         // Hàm để fetch dữ liệu từ API /show và nhét vào <div class="data">
+        // hiển thị dữ liệu
         function fetchData() {
             fetch("http://localhost:8000/show", { method: "GET" })
                 .then(response => response.text())  // Nhận dữ liệu dưới dạng text

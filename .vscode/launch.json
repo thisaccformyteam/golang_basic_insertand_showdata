@@ -12,5 +12,6 @@
             "program": "${workspaceFolder}",
             "proxy": "http://localhost:8000"
         }
-    ]
+    ],
+    "authou":"HaTrungHieu"
 }
