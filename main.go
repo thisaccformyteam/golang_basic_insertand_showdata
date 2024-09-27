@@ -9,10 +9,10 @@ import (
 	_ "github.com/go-sql-driver/mysql" // Import the MySQL driver
 )
 
-// Hàm kết nối đến cơ sở dữ liệu
+// Hàm kết nối đến cơ sở dữ liệu Mysql trong xampp
 func dbConn() (*sql.DB, error) {
 	// dataname:test
-	// port:127.0.0.1:3379
+	// port:127.0.0.1:3379 - port mặc định là 3306
 	// password:""
 	// user:root
 	db, err := sql.Open("mysql", "root:@tcp(127.0.0.1:3379)/test") // Không có password
@@ -56,6 +56,7 @@ func insertdb(w http.ResponseWriter, r *http.Request) {
 }
 
 // Hàm để thêm CORS headers-hàm này được tạo ra để nó chấp nhân mọi đầu vào theo cái chính sách cros gì gì đó của html
+// nếu xóa hàm này đi thì XIN CHÚC MỪNG fetch sẽ không lấy được dữ liệu
 func enableCORS(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
