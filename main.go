@@ -22,6 +22,9 @@ func dbConn() (*sql.DB, error) {
 	return db, nil
 }
 
+// biến toàn cục để kết nối database
+var conn, err = dbConn()
+
 // Hàm insert dữ liệu vào cơ sở dữ liệu
 func insertdb(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w)
@@ -29,15 +32,6 @@ func insertdb(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
-	conn, err := dbConn()
-	if err != nil {
-		log.Println("Kết nối cơ sở dữ liệu thất bại:", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	defer conn.Close()
-
 	name := r.FormValue("name")
 	email := r.FormValue("email")
 	if name == "" || email == "" {
@@ -66,16 +60,8 @@ func enableCORS(w http.ResponseWriter) {
 // hàm này được dùng để hiển thị dữ liệu
 func showdb(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w)
-	conn, err := dbConn()
 	//sau khi enablecors thì xóa dòng code bên dưới đi được
 	w.Header().Set("Content-Type", "text/paint")
-	defer conn.Close() // Đóng kết nối khi thực hiện xong
-
-	if err != nil {
-		log.Printf("Kết nối database thất bại: %v", err)
-		http.Error(w, "Lỗi kết nối database", http.StatusInternalServerError)
-		return
-	}
 	//hàm này đồng thời cũng quyết định vị trí sẽ xuất hiện của các bảng
 	rows, err := conn.Query("SELECT id, name, email FROM users")
 	if err != nil {
@@ -84,10 +70,8 @@ func showdb(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer rows.Close() // Kết thúc lệnh khi hiển thị xong
-
 	// Tạo chuỗi HTML
 	html := "<table border='1'><tr><th>ID</th><th>Name</th><th>Email</th></tr>"
-
 	// Duyệt qua các kết quả
 	for rows.Next() {
 		var id int
@@ -118,6 +102,9 @@ func showdb(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(html)
 	fmt.Fprint(w, html) // Trả chuỗi HTML về cho frontend
 }
+
+// tìm kiếm theo tên của bản
+// có thể sử thành tìm kiếm tùy ý nếu muốn
 func findbyName(w http.ResponseWriter, r *http.Request) {
 	enableCORS(w)
 	// Lấy giá trị của biến name từ query string
@@ -127,13 +114,6 @@ func findbyName(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Thiếu tên trong request", http.StatusBadRequest)
 		return
 	}
-	//kết nối với database
-	conn, err := dbConn()
-	if err != nil {
-		fmt.Println("kết nối database thất bại ở hàm  findbyname")
-	}
-	defer conn.Close() // nhớ đóng kết nối nhá
-
 	// truy vấn dữ liệu theo tên
 	rowss, err := conn.Query("select id,name,email from users where name like ?", "%"+name+"%")
 	if err != nil {
@@ -159,6 +139,7 @@ func findbyName(w http.ResponseWriter, r *http.Request) {
 
 // Hàm main
 func main() {
+	defer conn.Close()
 	http.HandleFunc("/insert", insertdb)
 	http.HandleFunc("/show", showdb)
 	http.HandleFunc("/options", func(w http.ResponseWriter, r *http.Request) {
