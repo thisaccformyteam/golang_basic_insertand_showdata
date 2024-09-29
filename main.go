@@ -85,7 +85,7 @@ func showdb(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Tạo hàng HTML từ dữ liệu
-		html += fmt.Sprintf("<tr><td>%d</td><td>%s</td><td>%s</td></tr>", id, name, email)
+		html += fmt.Sprintf(`<tr><td><a href="edit.html?id=%d">%d</a></td><td>%s</td><td>%s</td></tr>`, id, id, name, email)
 	}
 
 	// Kết thúc bảng
@@ -137,8 +137,68 @@ func findbyName(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, requestText)
 }
 
+func editUser(w http.ResponseWriter, r *http.Request) {
+	enableCORS(w)
+	// Lấy ID của người dùng từ query string
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		http.Error(w, "Thiếu ID người dùng", http.StatusBadRequest)
+		return
+	}
+	// Truy vấn lấy thông tin người dùng theo ID
+	var name, email string
+	err = conn.QueryRow("SELECT name, email FROM users WHERE id = ?", id).Scan(&name, &email)
+	if err != nil {
+		http.Error(w, "Không tìm thấy người dùng", http.StatusNotFound)
+		return
+	}
+
+	// Hiển thị form HTML với các giá trị đã có trong database
+	html := `
+			<form action="http://localhost:8000/updateUser" method="POST">
+				<input type="hidden" name="id" value="` + id + `">
+				<label>Tên:</label><br>
+				<input type="text" name="name" value="` + name + `"><br>
+				<label>Email:</label><br>
+				<input type="email" name="email" value="` + email + `"><br>
+				<button type="submit">Cập nhật</button>
+			</form>`
+	// Trả về trang HTML
+	w.Header().Set("Content-Type", "text/paint")
+	fmt.Fprint(w, html)
+}
+
+func updateUser(w http.ResponseWriter, r *http.Request) {
+	enableCORS(w)
+	if r.Method != http.MethodPost {
+		http.Error(w, "Phương thức không hợp lệ", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Lấy dữ liệu từ form
+	id := r.FormValue("id")
+	name := r.FormValue("name")
+	email := r.FormValue("email")
+
+	// Kiểm tra các giá trị có hợp lệ không
+	if id == "" && name == "" && email == "" {
+		http.Error(w, "Thiếu thông tin", http.StatusBadRequest)
+		return
+	}
+	// Thực hiện câu truy vấn UPDATE
+	_, err = conn.Exec("UPDATE users SET name = ?, email = ? WHERE id = ?", name, email, id)
+	if err != nil {
+		http.Error(w, "Cập nhật dữ liệu thất bại", http.StatusInternalServerError)
+		return
+	}
+
+	// Thông báo cập nhật thành công
+	fmt.Fprintf(w, "Cập nhật thành công người dùng có ID: %s", id)
+}
+
 // Hàm main
 func main() {
+
 	defer conn.Close()
 	http.HandleFunc("/insert", insertdb)
 	http.HandleFunc("/show", showdb)
@@ -146,6 +206,8 @@ func main() {
 		enableCORS(w)
 	})
 	http.HandleFunc("/findbyname", findbyName)
+	http.HandleFunc("/edit", editUser)
+	http.HandleFunc("/updateUser", updateUser)
 	log.Println("Server đang chạy tại http://localhost:8000")
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
